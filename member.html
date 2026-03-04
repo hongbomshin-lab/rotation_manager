@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>로테이션 대시보드</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#e3f2fd",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101a22",
+          },
+          fontFamily: {
+            display: ["Inter", "Noto Sans KR", "sans-serif"],
+          },
+          borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+        },
+      },
+    };
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    body {
+      -webkit-tap-highlight-color: transparent;
+      min-height: max(884px, 100dvh);
+    }
+
+    .task-completed .task-title {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+  <div class="relative flex min-h-screen w-full flex-col bg-white dark:bg-background-dark overflow-x-hidden">
+    <!-- Header -->
+    <div class="flex items-center bg-white dark:bg-background-dark p-4 sticky top-0 z-10 border-b border-primary/30">
+      <div class="flex w-10 items-center justify-start">
+        <button onclick="openEditProfileModal()"
+          class="flex items-center justify-center rounded-lg h-10 w-10 bg-transparent text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          title="내 정보 수정">
+          <span class="material-symbols-outlined text-2xl">manage_accounts</span>
+        </button>
+      </div>
+      <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight flex-1 text-center">로테이션 대시보드</h2>
+      <div class="flex w-10 items-center justify-end">
+        <button onclick="signOut()"
+          class="flex items-center justify-center rounded-lg h-10 w-10 bg-transparent text-slate-900 dark:text-slate-100 relative"
+          title="로그아웃">
+          <span class="material-symbols-outlined text-2xl">logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="p-6 bg-gradient-to-b from-primary/40 to-transparent">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-4">
+          <div
+            class="bg-blue-600 rounded-full h-20 w-20 border-4 border-white shadow-md flex items-center justify-center">
+            <span class="material-symbols-outlined text-white text-4xl"
+              style="font-variation-settings: 'FILL' 1">person</span>
+          </div>
+          <div class="flex flex-col">
+            <p id="user-greeting" class="text-slate-900 dark:text-slate-100 text-2xl font-bold tracking-tight">안녕하세요!
+            </p>
+            <p id="user-info" class="text-slate-600 dark:text-slate-400 text-sm font-medium">로딩 중...</p>
+          </div>
+        </div>
+        <!-- Rotation Badge -->
+        <div
+          class="mt-2 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-primary flex items-center gap-3">
+          <div class="bg-primary/50 p-2 rounded-lg text-blue-700">
+            <span class="material-symbols-outlined">clinical_notes</span>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">이번 주 로테이션</p>
+            <p id="rotation-badge" class="text-lg font-bold text-blue-800 dark:text-blue-300">로딩 중...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Guides -->
+    <div class="px-4 py-2">
+      <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold px-2 pb-3 flex items-center gap-2">
+        <span class="material-symbols-outlined text-blue-600">event_note</span>
+        상세 안내
+      </h3>
+      <div id="guide-container"
+        class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden">
+        <div class="flex items-center p-4 gap-4">
+          <div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <span class="material-symbols-outlined">pending</span>
+          </div>
+          <div class="flex flex-col">
+            <p class="text-slate-400 text-sm">가이드를 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Tasks -->
+    <div class="px-4 py-6 mb-20">
+      <div class="flex justify-between items-center px-2 pb-3">
+        <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-600">assignment</span>
+          나의 남은 과제
+        </h3>
+        <span id="task-count"
+          class="text-blue-600 dark:text-blue-400 text-xs font-bold bg-primary/40 px-2 py-1 rounded-full">0건</span>
+      </div>
+      <div id="task-list" class="flex flex-col gap-3">
+        <div class="text-center py-8 text-slate-400 text-sm">과제를 불러오는 중...</div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div id="bottom-nav"
+      class="fixed bottom-0 left-0 right-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-2 pb-6 flex justify-around items-center z-50">
+      <a class="flex flex-col items-center gap-1 text-blue-600" href="member.html">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">home</span>
+        <p class="text-[10px] font-bold">홈</p>
+      </a>
+      <!-- 조장 메뉴는 JS에서 권한 확인 후 동적으로 추가합니다 -->
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div id="edit-profile-modal" class="fixed inset-0 z-[70] hidden items-center justify-center modal-overlay">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
+        <h3 class="text-lg font-bold">내 정보 수정</h3>
+        <button onclick="closeEditProfileModal()" class="text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form onsubmit="handleEditProfile(event)" class="p-5 flex flex-col gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">이름</label>
+          <input id="edit-profile-name" type="text" required
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">조 번호 (1-10)</label>
+          <input id="edit-profile-group" type="number" min="1" max="10" required
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <div class="flex items-center px-1">
+          <input id="edit-profile-leader" type="checkbox"
+            class="h-5 w-5 rounded border-2 border-slate-200 dark:border-slate-600 text-blue-600 focus:ring-blue-500 dark:bg-slate-700" />
+          <label for="edit-profile-leader" class="ml-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
+            조장 권한
+          </label>
+        </div>
+        <button type="submit"
+          class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">save</span> 저장하기
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    let _currentUser = null;
+    let _currentDept = null;
+    let _currentDeptIndex = null;
+
+    async function init() {
+      _currentUser = await requireAuth();
+      if (!_currentUser) return;
+
+      const weekNum = getCurrentWeekNumber();
+      _currentDeptIndex = getCurrentDepartmentIndex(_currentUser.group_id);
+      const dept = await getDepartmentByIndex(_currentDeptIndex);
+      _currentDept = dept;
+
+      // 프로필 렌더링
+      document.getElementById('user-greeting').textContent = `안녕하세요, ${_currentUser.name}님!`;
+      document.getElementById('user-info').textContent = `${_currentUser.group_id}조 · 서울대학교 치과대학 원내생`;
+      document.getElementById('rotation-badge').innerHTML =
+        `${dept.name} <span class="text-sm font-normal text-slate-600 dark:text-slate-400">(${weekNum}주차)</span>`;
+
+      // 권한별 UI 렌더링
+      if (_currentUser.is_leader) {
+        // 네비게이션바 조장 권한 메뉴 추가
+        const bottomNav = document.getElementById('bottom-nav');
+        bottomNav.insertAdjacentHTML('beforeend', `
+          <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" href="head.html">
+            <span class="material-symbols-outlined">crown</span>
+            <p class="text-[10px] font-medium">조장</p>
+          </a>
+        `);
+      }
+
+      // 가이드 & 과제 로드
+      await Promise.all([loadGuide(), loadTasks()]);
+    }
+
+    function getDayOfWeek(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00+09:00');
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      return days[d.getDay()];
+    }
+
+    async function loadGuide() {
+      if (!_currentDept) return;
+      const todayStr = getLocalDateString(new Date());
+      const tomorrowObj = new Date();
+      tomorrowObj.setDate(tomorrowObj.getDate() + 1);
+      const tomorrowStr = getLocalDateString(tomorrowObj);
+
+      const guides = await fetchWeeklyGuides(_currentUser.group_id, _currentDept.id);
+      const container = document.getElementById('guide-container');
+
+      const futureGuides = guides.filter(g => g.target_date >= todayStr);
+
+      if (futureGuides.length === 0) {
+        container.innerHTML = `
+          <div class="flex items-center p-4 gap-4">
+            <div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-400">
+              <span class="material-symbols-outlined">info</span>
+            </div>
+            <div class="flex flex-col">
+              <p class="text-slate-400 text-sm">등록된 상세 안내가 없습니다</p>
+              <p class="text-slate-300 text-xs">안내 사항이 등록되면 여기에 표시됩니다</p>
+            </div>
+          </div>`;
+        return;
+      }
+
+      // Group by date
+      const grouped = {};
+      futureGuides.forEach(g => {
+        if (!grouped[g.target_date]) grouped[g.target_date] = [];
+        grouped[g.target_date].push(g);
+      });
+
+      let html = '';
+      let index = 0;
+      for (const [date, dayGuides] of Object.entries(grouped)) {
+        const isHighlighted = (date === todayStr || date === tomorrowStr);
+        const isDefaultOpen = isHighlighted || index === 0; // 내일 일정이 없으면 최상단 일정 1개는 기본으로 열어둠
+
+        const dateObj = new Date(date + 'T00:00:00+09:00');
+        const dateFormatted = `${dateObj.getMonth() + 1}/${dateObj.getDate()} (${getDayOfWeek(date)})`;
+
+        const highlightClass = isHighlighted
+          ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+          : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+        const borderColor = isHighlighted
+          ? 'border-blue-100 dark:border-blue-800/50'
+          : 'border-slate-100 dark:border-slate-700';
+
+        html += `
+          <div class="border-b ${borderColor} last:border-none">
+            <button onclick="toggleGuideGroup('${date}')" class="w-full flex items-center justify-between px-4 py-3 ${highlightClass} transition-colors">
+              <div class="flex items-center gap-2">
+                <span class="font-bold">${dateFormatted}</span>
+                ${date === tomorrowStr ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white leading-none">내일</span>' : ''}
+                ${date === todayStr ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-600 text-white leading-none">오늘</span>' : ''}
+              </div>
+              <span id="icon-${date}" class="material-symbols-outlined transition-transform duration-200 ${isDefaultOpen ? 'rotate-180' : ''}">expand_more</span>
+            </button>
+            <div id="content-${date}" class="${isDefaultOpen ? 'block' : 'hidden'} divide-y divide-slate-50 dark:divide-slate-700/50">
+        `;
+
+        dayGuides.forEach(guide => {
+          html += renderGuideFields(guide);
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+        index++;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function toggleGuideGroup(date) {
+      const content = document.getElementById(`content-${date}`);
+      const icon = document.getElementById(`icon-${date}`);
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        content.classList.add('block');
+        icon.classList.add('rotate-180');
+      } else {
+        content.classList.remove('block');
+        content.classList.add('hidden');
+        icon.classList.remove('rotate-180');
+      }
+    }
+
+    function renderGuideFields(guide) {
+      let html = '';
+      if (guide.attendance_time) {
+        html += `
+          <div class="flex items-center p-4 gap-4 bg-white dark:bg-slate-800">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600">
+              <span class="material-symbols-outlined text-xl">alarm</span>
+            </div>
+            <div class="flex flex-col">
+              <p class="text-slate-500 text-[11px] font-semibold">출첵시간</p>
+              <p class="text-slate-900 dark:text-slate-100 font-bold text-sm">${guide.attendance_time.substring(0, 5)}</p>
+            </div>
+          </div>`;
+      }
+      if (guide.dress_code) {
+        html += `
+          <div class="flex items-center p-4 gap-4 bg-white dark:bg-slate-800">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600">
+              <span class="material-symbols-outlined text-xl">checkroom</span>
+            </div>
+            <div class="flex flex-col">
+              <p class="text-slate-500 text-[11px] font-semibold">복장 안내</p>
+              <p class="text-slate-900 dark:text-slate-100 font-bold text-sm">${guide.dress_code}</p>
+            </div>
+          </div>`;
+      }
+      if (guide.materials) {
+        html += `
+          <div class="flex items-center p-4 gap-4 bg-white dark:bg-slate-800">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600">
+              <span class="material-symbols-outlined text-xl">handyman</span>
+            </div>
+            <div class="flex flex-col">
+              <p class="text-slate-500 text-[11px] font-semibold">필수 준비물</p>
+              <p class="text-slate-900 dark:text-slate-100 font-bold text-sm">${guide.materials}</p>
+            </div>
+          </div>`;
+      }
+      return html;
+    }
+
+    async function loadTasks() {
+      if (!_currentDept) return;
+      const tasks = await fetchTasksWithProgress(_currentUser.group_id, _currentDept.id, _currentUser.id);
+      const listEl = document.getElementById('task-list');
+      const countEl = document.getElementById('task-count');
+
+      const remaining = tasks.filter(t => !t.is_completed).length;
+      countEl.textContent = `${remaining}건 남음`;
+
+      if (tasks.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-center py-8 text-slate-400 text-sm">
+            <span class="material-symbols-outlined text-4xl mb-2 block">inbox</span>
+            등록된 과제가 없습니다
+          </div>`;
+        return;
+      }
+
+      listEl.innerHTML = tasks.map(task => {
+        const dday = task.due_date ? getDday(task.due_date) : '';
+        const ddayStyle = task.due_date ? getDdayStyle(task.due_date) : '';
+        const completedClass = task.is_completed ? 'task-completed opacity-60' : '';
+
+        return `
+          <label class="flex items-center p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm cursor-pointer active:scale-[0.98] transition-all ${completedClass}">
+            <div class="relative flex items-center">
+              <input type="checkbox" ${task.is_completed ? 'checked' : ''}
+                onchange="toggleTask(${task.id}, this.checked)"
+                class="peer h-6 w-6 rounded border-2 border-primary text-blue-600 focus:ring-blue-500" />
+            </div>
+            <div class="ml-4 flex-1">
+              <div class="flex justify-between items-start">
+                <p class="task-title text-slate-900 dark:text-slate-100 font-medium">${task.title}</p>
+                ${dday ? `<span class="ml-2 whitespace-nowrap text-xs font-bold ${ddayStyle} px-2 py-0.5 rounded border">${dday}</span>` : ''}
+              </div>
+              ${task.due_date ? `<p class="text-slate-400 text-xs mt-1">마감: ${task.due_date}</p>` : ''}
+            </div>
+          </label>`;
+      }).join('');
+    }
+
+    async function toggleTask(taskId, isCompleted) {
+      try {
+        await upsertTaskProgress(taskId, _currentUser.id, isCompleted);
+        await loadTasks();
+      } catch (err) {
+        showToast('과제 상태 업데이트에 실패했습니다.', 'error');
+        console.error(err);
+      }
+    }
+
+    function openEditProfileModal() {
+      const modal = document.getElementById('edit-profile-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (_currentUser) {
+        document.getElementById('edit-profile-name').value = _currentUser.name || '';
+        document.getElementById('edit-profile-group').value = _currentUser.group_id || '';
+        document.getElementById('edit-profile-leader').checked = _currentUser.is_leader || false;
+      }
+    }
+
+    function closeEditProfileModal() {
+      const modal = document.getElementById('edit-profile-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function handleEditProfile(e) {
+      e.preventDefault();
+      const name = document.getElementById('edit-profile-name').value.trim();
+      const groupId = parseInt(document.getElementById('edit-profile-group').value, 10);
+      const isLeader = document.getElementById('edit-profile-leader').checked;
+
+      try {
+        const { error } = await _supabase
+          .from('profiles')
+          .update({ name: name, group_id: groupId, is_leader: isLeader })
+          .eq('auth_id', _currentUser.auth_id);
+
+        if (error) throw error;
+
+        showToast('정보가 성공적으로 수정되었습니다!', 'success');
+        closeEditProfileModal();
+
+        setTimeout(() => {
+          location.reload();
+        }, 800);
+      } catch (err) {
+        showToast('정보 수정에 실패했습니다.', 'error');
+        console.error(err);
+      }
+    }
+
+    // 초기화
+    init();
+  </script>
+</body>
+
+</html>

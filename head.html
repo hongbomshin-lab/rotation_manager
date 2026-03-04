@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>조장 관리 페이지</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#e3f2fd",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101a22",
+          },
+          fontFamily: {
+            display: ["Inter", "Noto Sans KR", "sans-serif"],
+          },
+          borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      -webkit-tap-highlight-color: transparent;
+      min-height: max(884px, 100dvh);
+    }
+
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+  <div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+    <!-- Header -->
+    <header
+      class="sticky top-0 z-10 flex items-center bg-white dark:bg-slate-900 border-b border-primary/30 p-4 justify-between shadow-sm">
+      <div
+        class="text-blue-600 dark:text-blue-400 flex size-10 shrink-0 items-center justify-center bg-primary/40 rounded-full">
+        <span class="material-symbols-outlined">crown</span>
+      </div>
+      <h1 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight flex-1 text-center">조장 관리
+        페이지</h1>
+      <button onclick="signOut()" class="text-slate-400 hover:text-slate-600 flex size-10 items-center justify-center"
+        title="로그아웃">
+        <span class="material-symbols-outlined">logout</span>
+      </button>
+    </header>
+
+    <main class="flex-1 pb-24">
+      <!-- Banner -->
+      <div class="px-4 pt-6 pb-2">
+        <div class="w-full h-32 rounded-xl overflow-hidden relative bg-gradient-to-r from-blue-600 to-blue-400">
+          <div class="absolute inset-0 flex items-end p-4">
+            <div class="flex flex-col">
+              <span id="banner-week" class="text-white font-semibold text-sm">로딩 중...</span>
+              <span id="banner-dept" class="text-blue-100 text-xs mt-0.5"></span>
+            </div>
+          </div>
+          <div class="absolute top-4 right-4">
+            <span id="banner-group"
+              class="bg-white/20 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Task Management -->
+      <section class="px-4 pt-6">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="material-symbols-outlined text-blue-500 text-xl">assignment</span>
+          <h2 class="text-slate-900 dark:text-white text-[20px] font-bold leading-tight">이번 주 과제 및 가이드 관리</h2>
+        </div>
+        <div class="flex flex-col gap-3">
+          <button onclick="openCreateModal()"
+            class="flex min-w-[84px] cursor-pointer items-center justify-center gap-2 rounded-xl h-14 px-5 bg-blue-600 text-white text-base font-bold transition-all active:scale-95 shadow-md shadow-blue-200 dark:shadow-none">
+            <span class="material-symbols-outlined">add_circle</span>
+            <span class="truncate">새 과제 / 가이드 직접 등록하기</span>
+          </button>
+          <div class="flex gap-2">
+            <button id="import-task-btn" onclick="handleImportTasks()"
+              class="flex-1 flex min-w-[84px] cursor-pointer items-center justify-center gap-1.5 rounded-xl h-14 px-2 bg-white dark:bg-slate-800 border-2 border-primary text-slate-700 dark:text-slate-200 text-[13px] font-bold transition-all active:scale-95">
+              <span class="material-symbols-outlined text-base">history</span>
+              <span id="import-task-btn-text" class="truncate">과제 불러오기</span>
+            </button>
+            <button id="import-guide-btn" onclick="handleImportGuides()"
+              class="flex-1 flex min-w-[84px] cursor-pointer items-center justify-center gap-1.5 rounded-xl h-14 px-2 bg-white dark:bg-slate-800 border-2 border-primary text-slate-700 dark:text-slate-200 text-[13px] font-bold transition-all active:scale-95">
+              <span class="material-symbols-outlined text-base">event_repeat</span>
+              <span id="import-guide-btn-text" class="truncate">가이드 불러오기</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Current Tasks List -->
+      <section class="px-4 pt-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-500 text-xl">checklist</span>
+            <h2 class="text-slate-900 dark:text-white text-base font-bold">등록된 과제</h2>
+          </div>
+          <span id="current-task-count" class="text-xs text-slate-500 font-medium"></span>
+        </div>
+        <div id="current-task-list" class="flex flex-col gap-2">
+          <div class="text-center py-4 text-slate-400 text-sm">로딩 중...</div>
+        </div>
+      </section>
+
+      <!-- Section: Daily Guides List -->
+      <section class="px-4 pt-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-500 text-xl">lightbulb</span>
+            <h2 class="text-slate-900 dark:text-white text-base font-bold">등록된 가이드</h2>
+          </div>
+        </div>
+        <div id="current-guide-list" class="flex flex-col gap-2">
+          <div class="text-center py-4 text-slate-400 text-sm">로딩 중...</div>
+        </div>
+      </section>
+
+      <!-- Deleted Section: Member Progress -->
+
+      <!-- Bottom Nav -->
+      <nav
+        class="fixed bottom-0 left-0 right-0 flex justify-around border-t border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 pb-6 pt-2 z-20">
+        <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          href="member.html">
+          <span class="material-symbols-outlined">home</span>
+          <p class="text-[10px] font-bold">홈</p>
+        </a>
+        <a class="flex flex-col items-center gap-1 text-blue-600 dark:text-blue-400" href="head.html">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">crown</span>
+          <p class="text-[10px] font-bold">조장</p>
+        </a>
+      </nav>
+  </div>
+
+  <!-- Create Task/Guide Modal -->
+  <div id="create-modal" class="fixed inset-0 z-[60] hidden items-center justify-center modal-overlay">
+    <div
+      class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
+        <h3 class="text-lg font-bold">새 항목 등록</h3>
+        <button onclick="closeCreateModal()" class="text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Tab Selector -->
+      <div class="flex border-b border-slate-100 dark:border-slate-700">
+        <button id="modal-tab-task" onclick="switchModalTab('task')"
+          class="flex-1 py-3 text-sm font-bold text-center text-blue-700 border-b-2 border-blue-600">과제</button>
+        <button id="modal-tab-guide" onclick="switchModalTab('guide')"
+          class="flex-1 py-3 text-sm font-bold text-center text-slate-400 border-b-2 border-transparent">가이드</button>
+      </div>
+
+      <!-- Task Form -->
+      <form id="modal-task-form" onsubmit="handleCreateTask(event)" class="p-5 flex flex-col gap-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">과제명</label>
+          <input id="create-task-title" type="text" required placeholder="예: 초진 환자 케이스 발표"
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">마감일</label>
+          <input id="create-task-due" type="date" required
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <button type="submit"
+          class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">add_circle</span> 과제 등록
+        </button>
+      </form>
+
+      <!-- Guide Form -->
+      <form id="modal-guide-form" onsubmit="handleCreateGuide(event)" class="p-5 flex flex-col gap-4 hidden">
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">대상 날짜</label>
+            <input id="create-guide-date" type="date" required
+              class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+          </div>
+          <div class="w-32">
+            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">출첵시간</label>
+            <input id="create-guide-time" type="time"
+              class="w-full h-12 px-2 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">복장 안내</label>
+          <input id="create-guide-dress" type="text" placeholder="예: 스크럽 및 원내생 가운"
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">필수 준비물</label>
+          <input id="create-guide-materials" type="text" placeholder="예: 덴티폼, 기본 기구 세트"
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <button type="submit"
+          class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">add_circle</span> 가이드 등록
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Task Modal -->
+  <div id="edit-task-modal" class="fixed inset-0 z-[60] hidden items-center justify-center modal-overlay">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
+        <h3 class="text-lg font-bold">과제 수정</h3>
+        <button onclick="closeEditTaskModal()" class="text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="edit-task-form" onsubmit="handleEditTask(event)" class="p-5 flex flex-col gap-4">
+        <input type="hidden" id="edit-task-id" />
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">과제명</label>
+          <input id="edit-task-title" type="text" required
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">마감일</label>
+          <input id="edit-task-due" type="date" required
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <button type="submit"
+          class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">save</span> 수정하기
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Guide Modal -->
+  <div id="edit-guide-modal" class="fixed inset-0 z-[60] hidden items-center justify-center modal-overlay">
+    <div
+      class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
+        <h3 class="text-lg font-bold">가이드 수정</h3>
+        <button onclick="closeEditGuideModal()" class="text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="edit-guide-form" onsubmit="handleEditGuide(event)" class="p-5 flex flex-col gap-4">
+        <input type="hidden" id="edit-guide-id" />
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">대상 날짜</label>
+            <input id="edit-guide-date" type="date" required
+              class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+          </div>
+          <div class="w-32">
+            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">출첵시간</label>
+            <input id="edit-guide-time" type="time"
+              class="w-full h-12 px-2 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">복장 안내</label>
+          <input id="edit-guide-dress" type="text"
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">필수 준비물</label>
+          <input id="edit-guide-materials" type="text"
+            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <button type="submit"
+          class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">save</span> 수정하기
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center modal-overlay">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-[320px] mx-4 shadow-2xl p-6 text-center">
+      <div
+        class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center mx-auto mb-4">
+        <span class="material-symbols-outlined text-2xl">warning</span>
+      </div>
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" id="confirm-title">항목 삭제</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-6" id="confirm-message">정말 삭제하시겠습니까?</p>
+      <div class="flex gap-3">
+        <button type="button" onclick="closeConfirmModal(false)"
+          class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold active:scale-95 transition-all">취소</button>
+        <button type="button" onclick="closeConfirmModal(true)"
+          class="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold shadow-md shadow-red-200 dark:shadow-none active:scale-95 transition-all">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    let _currentUser = null;
+    let _currentDept = null;
+    let _currentDeptIndex = null;
+    let _weekNumber = null;
+
+    async function init() {
+      _currentUser = await requireAuth();
+      if (!_currentUser) return;
+
+      // 조장 권한 체크 (조장이 아니면 member.html로 튕겨내기)
+      if (!_currentUser.is_leader) {
+        showToast('조장 권한이 없습니다.', 'error');
+        setTimeout(() => { window.location.href = 'member.html'; }, 1000);
+        return;
+      }
+
+      _weekNumber = getCurrentWeekNumber();
+      _currentDeptIndex = getCurrentDepartmentIndex(_currentUser.group_id);
+      _currentDept = await getDepartmentByIndex(_currentDeptIndex);
+
+      // 배너 렌더링
+      document.getElementById('banner-week').textContent = `임상 실습 ${_weekNumber}주차 진행 중`;
+      document.getElementById('banner-dept').textContent = `현재 과: ${_currentDept.name}`;
+      document.getElementById('banner-group').textContent = `${_currentUser.group_id}조`;
+
+      // 이전 조 버튼 텍스트
+      const prevGroupId = getPreviousGroupId(_currentDeptIndex, _weekNumber);
+      if (prevGroupId) {
+        document.getElementById('import-task-btn-text').textContent = `과제 복사 (${prevGroupId}조)`;
+        document.getElementById('import-guide-btn-text').textContent = `가이드 복사 (${prevGroupId}조)`;
+      } else {
+        document.getElementById('import-task-btn-text').textContent = '1주차(과제 없음)';
+        document.getElementById('import-task-btn').disabled = true;
+        document.getElementById('import-task-btn').classList.add('opacity-50');
+
+        document.getElementById('import-guide-btn-text').textContent = '1주차(가이드 없음)';
+        document.getElementById('import-guide-btn').disabled = true;
+        document.getElementById('import-guide-btn').classList.add('opacity-50');
+      }
+
+      // 데이터 로드
+      await Promise.all([loadCurrentTasks(), loadCurrentGuides()]);
+    }
+
+    // ========== 현재 등록된 과제 ==========
+    async function loadCurrentTasks() {
+      if (!_currentDept) return;
+      const tasks = await fetchTasks(_currentUser.group_id, _currentDept.id);
+      window._cachedTasks = tasks;
+      const container = document.getElementById('current-task-list');
+      const countEl = document.getElementById('current-task-count');
+      countEl.textContent = `총 ${tasks.length}건`;
+
+      if (tasks.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-6 text-center">
+            <span class="material-symbols-outlined text-3xl text-slate-300 mb-2 block">inbox</span>
+            <p class="text-slate-400 text-sm">등록된 과제가 없습니다</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = tasks.map(t => {
+        const dday = t.due_date ? getDday(t.due_date) : '';
+        const ddayStyle = t.due_date ? getDdayStyle(t.due_date) : '';
+        return `
+          <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+            <div class="flex-1 min-w-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 p-1 -m-1 rounded transition-colors" onclick="openEditTaskModal(${t.id})">
+              <p class="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">${t.title}</p>
+              <p class="text-xs text-slate-400 mt-0.5">${t.due_date || '마감일 미정'} ${t.rotation_day ? '· ' + t.rotation_day + '일차' : ''}</p>
+            </div>
+            ${dday ? `<span class="text-xs font-bold ${ddayStyle} px-2 py-0.5 rounded border ml-2 whitespace-nowrap">${dday}</span>` : ''}
+            <button type="button" onclick="handleDeleteTask(${t.id})" class="p-2 ml-1 text-slate-300 hover:text-red-500 transition-colors shrink-0 active:scale-90">
+              <span class="material-symbols-outlined text-xl pointer-events-none">delete</span>
+            </button>
+          </div>`;
+      }).join('');
+    }
+
+    // ========== 현재 등록된 가이드 ==========
+    async function loadCurrentGuides() {
+      if (!_currentDept) return;
+      const guides = await fetchWeeklyGuides(_currentUser.group_id, _currentDept.id);
+      window._cachedGuides = guides;
+      const container = document.getElementById('current-guide-list');
+
+      if (guides.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-6 text-center">
+            <span class="material-symbols-outlined text-3xl text-slate-300 mb-2 block">lightbulb</span>
+            <p class="text-slate-400 text-sm">등록된 가이드가 없습니다</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = guides.map(g => `
+        <div class="flex items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 gap-3">
+          <div class="bg-primary/30 p-1.5 rounded-lg text-blue-700 shrink-0">
+            <span class="material-symbols-outlined text-lg">event</span>
+          </div>
+          <div class="flex-1 min-w-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 p-1 -m-1 rounded transition-colors" onclick="openEditGuideModal(${g.id})">
+            <p class="text-xs text-slate-500 font-medium">${g.target_date ? formatDateShort(g.target_date) : '날짜 미정'}</p>
+            <p class="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
+              ${g.attendance_time ? '⏰ ' + g.attendance_time.substring(0, 5) + ' ' : ''}${g.dress_code ? '👔 ' + g.dress_code : ''}${g.dress_code && g.materials ? ' · ' : ''}${g.materials ? '🔧 ' + g.materials : ''}
+            </p>
+          </div>
+          <button type="button" onclick="handleDeleteGuide(${g.id})" class="p-2 ml-1 text-slate-300 hover:text-red-500 transition-colors shrink-0 active:scale-90">
+            <span class="material-symbols-outlined text-xl pointer-events-none">delete</span>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // ========== Deleted Member Progress Section ==========
+
+    // ========== 이전 조 과제 및 가이드 불러오기 ==========
+    async function handleImportTasks() {
+      if (!confirm('이전 조의 과제를 불러오시겠습니까? 기존 과제는 유지됩니다.')) return;
+
+      const btn = document.getElementById('import-task-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-base">progress_activity</span> <span class="truncate text-[13px]">불러오는 중...</span>';
+
+      try {
+        const result = await importPreviousTasks(_currentUser.group_id, _currentDept.id, _currentDeptIndex);
+        showToast(`${result.prevGroupId}조의 과제 ${result.inserted.length}건을 불러왔습니다!`, 'success');
+        await loadCurrentTasks();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        const prevGroupId = getPreviousGroupId(_currentDeptIndex, _weekNumber);
+        btn.innerHTML = `<span class="material-symbols-outlined text-base">history</span><span id="import-task-btn-text" class="truncate text-[13px]">과제 복사 (${prevGroupId}조)</span>`;
+      }
+    }
+
+    async function handleImportGuides() {
+      if (!confirm('이전 조의 가이드를 불러오시겠습니까? 기존 가이드는 유지됩니다.')) return;
+
+      const btn = document.getElementById('import-guide-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-base">progress_activity</span> <span class="truncate text-[13px]">불러오는 중...</span>';
+
+      try {
+        const result = await importPreviousGuides(_currentUser.group_id, _currentDept.id, _currentDeptIndex);
+        showToast(`${result.prevGroupId}조의 가이드 ${result.inserted.length}건을 불러왔습니다!`, 'success');
+        await loadCurrentGuides();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        const prevGroupId = getPreviousGroupId(_currentDeptIndex, _weekNumber);
+        btn.innerHTML = `<span class="material-symbols-outlined text-base">event_repeat</span><span id="import-guide-btn-text" class="truncate text-[13px]">가이드 복사 (${prevGroupId}조)</span>`;
+      }
+    }
+
+    let _confirmResolve = null;
+
+    function openConfirmModal(title, message) {
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      const modal = document.getElementById('confirm-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      return new Promise(resolve => {
+        _confirmResolve = resolve;
+      });
+    }
+
+    function closeConfirmModal(result) {
+      const modal = document.getElementById('confirm-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (_confirmResolve) {
+        _confirmResolve(result);
+        _confirmResolve = null;
+      }
+    }
+
+    // ========== 과제 삭제 ==========
+    async function handleDeleteTask(taskId) {
+      if (!(await openConfirmModal('과제 삭제', '이 과제를 삭제하시겠습니까?'))) return;
+      try {
+        await deleteTask(taskId);
+        showToast('과제가 삭제되었습니다.', 'success');
+        await loadCurrentTasks();
+      } catch (err) {
+        console.error(err);
+        showToast('삭제에 실패했습니다: ' + (err.message || '알 수 없는 오류'), 'error');
+      }
+    }
+
+    // ========== 가이드 삭제 ==========
+    async function handleDeleteGuide(guideId) {
+      if (!(await openConfirmModal('가이드 삭제', '이 가이드를 삭제하시겠습니까?'))) return;
+      try {
+        await deleteDailyGuide(guideId);
+        showToast('가이드가 삭제되었습니다.', 'success');
+        await loadCurrentGuides();
+      } catch (err) {
+        console.error(err);
+        showToast('삭제에 실패했습니다: ' + (err.message || '알 수 없는 오류'), 'error');
+      }
+    }
+
+    // ========== 모달 ==========
+    function openCreateModal() {
+      const modal = document.getElementById('create-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCreateModal() {
+      const modal = document.getElementById('create-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      // Reset forms
+      document.getElementById('modal-task-form').reset();
+      document.getElementById('modal-guide-form').reset();
+    }
+
+    function switchModalTab(tab) {
+      const taskTab = document.getElementById('modal-tab-task');
+      const guideTab = document.getElementById('modal-tab-guide');
+      const taskForm = document.getElementById('modal-task-form');
+      const guideForm = document.getElementById('modal-guide-form');
+
+      if (tab === 'task') {
+        taskTab.className = 'flex-1 py-3 text-sm font-bold text-center text-blue-700 border-b-2 border-blue-600';
+        guideTab.className = 'flex-1 py-3 text-sm font-bold text-center text-slate-400 border-b-2 border-transparent';
+        taskForm.classList.remove('hidden');
+        guideForm.classList.add('hidden');
+      } else {
+        guideTab.className = 'flex-1 py-3 text-sm font-bold text-center text-blue-700 border-b-2 border-blue-600';
+        taskTab.className = 'flex-1 py-3 text-sm font-bold text-center text-slate-400 border-b-2 border-transparent';
+        guideForm.classList.remove('hidden');
+        taskForm.classList.add('hidden');
+      }
+    }
+
+    async function handleCreateTask(e) {
+      e.preventDefault();
+      const title = document.getElementById('create-task-title').value.trim();
+      const dueDate = document.getElementById('create-task-due').value;
+
+      let rotationDay = null;
+      if (dueDate) {
+        const dObj = new Date(dueDate);
+        const day = dObj.getDay();
+        rotationDay = day === 0 ? 0 : day; // 일요일은 주의 시작인 0일차
+      }
+
+      try {
+        await insertTask({
+          group_id: _currentUser.group_id,
+          department_id: _currentDept.id,
+          title,
+          due_date: dueDate || null,
+          rotation_day: rotationDay
+        });
+        showToast('과제가 등록되었습니다!', 'success');
+        closeCreateModal();
+        await loadCurrentTasks();
+      } catch (err) {
+        showToast('과제 등록에 실패했습니다.', 'error');
+        console.error(err);
+      }
+    }
+
+    async function handleCreateGuide(e) {
+      e.preventDefault();
+      const targetDate = document.getElementById('create-guide-date').value;
+      const attendanceTime = document.getElementById('create-guide-time').value || null;
+      const dressCode = document.getElementById('create-guide-dress').value.trim();
+      const materials = document.getElementById('create-guide-materials').value.trim();
+
+      if (!dressCode && !materials && !attendanceTime) {
+        showToast('복장 안내, 출첵시간, 또는 필수 준비물을 입력해주세요.', 'warning');
+        return;
+      }
+
+      try {
+        await insertDailyGuide({
+          group_id: _currentUser.group_id,
+          department_id: _currentDept.id,
+          target_date: targetDate || null,
+          attendance_time: attendanceTime,
+          dress_code: dressCode || null,
+          materials: materials || null
+        });
+        showToast('가이드가 등록되었습니다!', 'success');
+        closeCreateModal();
+        await loadCurrentGuides();
+      } catch (err) {
+        showToast('가이드 등록에 실패했습니다.', 'error');
+        console.error(err);
+      }
+    }
+
+    // ========== 수정 모달 ==========
+    function openEditTaskModal(id) {
+      const task = (window._cachedTasks || []).find(t => t.id === id);
+      if (!task) return;
+      document.getElementById('edit-task-id').value = task.id;
+      document.getElementById('edit-task-title').value = task.title;
+      document.getElementById('edit-task-due').value = task.due_date || '';
+
+      const modal = document.getElementById('edit-task-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeEditTaskModal() {
+      const modal = document.getElementById('edit-task-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function handleEditTask(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-task-id').value;
+      const title = document.getElementById('edit-task-title').value.trim();
+      const dueDate = document.getElementById('edit-task-due').value;
+
+      let rotationDay = null;
+      if (dueDate) {
+        const dObj = new Date(dueDate);
+        const day = dObj.getDay();
+        rotationDay = day === 0 ? 0 : day;
+      }
+
+      try {
+        await updateTask(id, {
+          title,
+          due_date: dueDate || null,
+          rotation_day: rotationDay
+        });
+        showToast('과제가 수정되었습니다!', 'success');
+        closeEditTaskModal();
+        await loadCurrentTasks();
+      } catch (err) {
+        showToast('과제 수정에 실패했습니다.', 'error');
+        console.error(err);
+      }
+    }
+
+    function openEditGuideModal(id) {
+      const guide = (window._cachedGuides || []).find(g => g.id === id);
+      if (!guide) return;
+      document.getElementById('edit-guide-id').value = guide.id;
+      document.getElementById('edit-guide-date').value = guide.target_date || '';
+      document.getElementById('edit-guide-time').value = guide.attendance_time || '';
+      document.getElementById('edit-guide-dress').value = guide.dress_code || '';
+      document.getElementById('edit-guide-materials').value = guide.materials || '';
+
+      const modal = document.getElementById('edit-guide-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeEditGuideModal() {
+      const modal = document.getElementById('edit-guide-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function handleEditGuide(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-guide-id').value;
+      const targetDate = document.getElementById('edit-guide-date').value;
+      const attendanceTime = document.getElementById('edit-guide-time').value || null;
+      const dressCode = document.getElementById('edit-guide-dress').value.trim();
+      const materials = document.getElementById('edit-guide-materials').value.trim();
+
+      if (!dressCode && !materials && !attendanceTime) {
+        showToast('복장 안내, 출첵시간, 또는 필수 준비물을 입력해주세요.', 'warning');
+        return;
+      }
+
+      try {
+        await updateDailyGuide(id, {
+          target_date: targetDate || null,
+          attendance_time: attendanceTime,
+          dress_code: dressCode || null,
+          materials: materials || null
+        });
+        showToast('가이드가 수정되었습니다!', 'success');
+        closeEditGuideModal();
+        await loadCurrentGuides();
+      } catch (err) {
+        showToast('가이드 수정에 실패했습니다.', 'error');
+        console.error(err);
+      }
+    }
+
+    // 초기화
+    init();
+  </script>
+</body>
+
+</html>
