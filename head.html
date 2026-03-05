@@ -151,17 +151,56 @@
 
       <!-- Bottom Nav -->
       <nav
-        class="fixed bottom-0 left-0 right-0 flex justify-around border-t border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 pb-6 pt-2 z-20">
+        class="fixed bottom-0 left-0 right-0 flex justify-around items-center border-t border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 pb-6 pt-2 z-20">
         <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           href="member.html">
           <span class="material-symbols-outlined">home</span>
           <p class="text-[10px] font-bold">홈</p>
         </a>
+        <button onclick="openMessageListModal()"
+          class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative"
+          id="msg-nav-btn">
+          <span class="relative">
+            <span class="material-symbols-outlined">mail</span>
+            <span id="msg-badge"
+              class="absolute -top-1.5 -right-2.5 hidden min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">0</span>
+          </span>
+          <p class="text-[10px] font-bold">메시지</p>
+        </button>
         <a class="flex flex-col items-center gap-1 text-blue-600 dark:text-blue-400" href="head.html">
           <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">crown</span>
           <p class="text-[10px] font-bold">조장</p>
         </a>
       </nav>
+  </div>
+
+  <!-- Message List Modal (from member.html) -->
+  <div id="msg-list-modal" class="fixed inset-0 z-[70] hidden items-center justify-center modal-overlay">
+    <div
+      class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700 shrink-0">
+        <h3 id="msg-modal-title" class="text-lg font-bold flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-600">mail</span> 받은 메시지
+        </h3>
+        <button onclick="closeMessageListModal()" class="text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Tab Selector (Hidden by default, shown if leader) -->
+      <div id="msg-tab-container" class="hidden border-b border-slate-100 dark:border-slate-700">
+        <button id="msg-tab-received" onclick="switchMsgTab('received')"
+          class="flex-1 py-3 text-sm font-bold text-center text-blue-700 border-b-2 border-blue-600">받은 메시지</button>
+        <button id="msg-tab-sent" onclick="switchMsgTab('sent')"
+          class="flex-1 py-3 text-sm font-bold text-center text-slate-400 border-b-2 border-transparent">보낸 메시지</button>
+      </div>
+
+      <div id="msg-list-container"
+        class="flex-1 overflow-y-auto p-4 flex flex-col gap-2 bg-slate-50/50 dark:bg-slate-900/20">
+        <div class="text-center py-8 text-slate-400 text-sm">로딩 중...</div>
+      </div>
+    </div>
+  </div>
   </div>
 
   <!-- Create Task/Guide Modal -->
@@ -194,6 +233,11 @@
           <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">마감일</label>
           <input id="create-task-due" type="date" required
             class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">코멘트</label>
+          <textarea id="create-task-comment" rows="2" placeholder="기타 참고사항을 입력하세요..."
+            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm resize-none"></textarea>
         </div>
         <button type="submit"
           class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
@@ -238,6 +282,11 @@
             </div>
           </div>
         </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">코멘트</label>
+          <textarea id="create-guide-comment" rows="2" placeholder="기타 참고사항을 입력하세요..."
+            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm resize-none"></textarea>
+        </div>
         <button type="submit"
           class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
           <span class="material-symbols-outlined">add_circle</span> 가이드 등록
@@ -266,6 +315,11 @@
           <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">마감일</label>
           <input id="edit-task-due" type="date" required
             class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">코멘트</label>
+          <textarea id="edit-task-comment" rows="2" placeholder="기타 참고사항을 입력하세요..."
+            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm resize-none"></textarea>
         </div>
         <button type="submit"
           class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
@@ -313,6 +367,11 @@
           </div>
           <div id="edit-guide-materials-container" class="flex flex-col gap-2">
           </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">코멘트</label>
+          <textarea id="edit-guide-comment" rows="2" placeholder="기타 참고사항을 입력하세요..."
+            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm resize-none"></textarea>
         </div>
         <button type="submit"
           class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
@@ -423,7 +482,7 @@
       }
 
       // 데이터 로드
-      await Promise.all([loadCurrentTasks(), loadCurrentGuides(), loadGroupMembers()]);
+      await Promise.all([loadCurrentTasks(), loadCurrentGuides(), loadGroupMembers(), loadUnreadBadge()]);
     }
 
     // ========== 현재 등록된 과제 ==========
@@ -855,6 +914,7 @@
       e.preventDefault();
       const title = document.getElementById('create-task-title').value.trim();
       const dueDate = document.getElementById('create-task-due').value;
+      const comment = document.getElementById('create-task-comment').value.trim();
 
       let rotationDay = null;
       if (dueDate) {
@@ -869,7 +929,8 @@
           department_id: _currentDept.id,
           title,
           due_date: dueDate || null,
-          rotation_day: rotationDay
+          rotation_day: rotationDay,
+          comment: comment || null
         });
         showToast('과제가 등록되었습니다!', 'success');
         closeCreateModal();
@@ -919,6 +980,7 @@
       document.getElementById('edit-task-id').value = task.id;
       document.getElementById('edit-task-title').value = task.title;
       document.getElementById('edit-task-due').value = task.due_date || '';
+      document.getElementById('edit-task-comment').value = task.comment || '';
 
       const modal = document.getElementById('edit-task-modal');
       modal.classList.remove('hidden');
@@ -936,6 +998,7 @@
       const id = document.getElementById('edit-task-id').value;
       const title = document.getElementById('edit-task-title').value.trim();
       const dueDate = document.getElementById('edit-task-due').value;
+      const comment = document.getElementById('edit-task-comment').value.trim();
 
       let rotationDay = null;
       if (dueDate) {
@@ -948,7 +1011,8 @@
         await updateTask(id, {
           title,
           due_date: dueDate || null,
-          rotation_day: rotationDay
+          rotation_day: rotationDay,
+          comment: comment || null
         });
         showToast('과제가 수정되었습니다!', 'success');
         closeEditTaskModal();
@@ -1010,6 +1074,187 @@
         showToast('가이드 수정에 실패했습니다.', 'error');
         console.error(err);
       }
+    }
+
+    // ========== 메시지 확인 로직 ==========
+    async function loadUnreadBadge() {
+      try {
+        const count = await getUnreadMessageCount(_currentUser.id);
+        const badge = document.getElementById('msg-badge');
+        if (count > 0) {
+          badge.textContent = count > 99 ? '99+' : count;
+          badge.classList.remove('hidden');
+          badge.classList.add('flex');
+        } else {
+          badge.classList.add('hidden');
+          badge.classList.remove('flex');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function formatMessageTime(isoStr) {
+      const d = new Date(isoStr);
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return '방금 전';
+      if (diffMin < 60) return `${diffMin}분 전`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}시간 전`;
+      const diffDay = Math.floor(diffHr / 24);
+      if (diffDay < 7) return `${diffDay}일 전`;
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+
+    let _currentMsgTab = 'received';
+
+    async function openMessageListModal() {
+      const modal = document.getElementById('msg-list-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      if (_currentUser && _currentUser.is_leader) {
+        document.getElementById('msg-tab-container').classList.remove('hidden');
+        document.getElementById('msg-tab-container').classList.add('flex');
+      }
+
+      await switchMsgTab('received');
+    }
+
+    async function switchMsgTab(tab) {
+      _currentMsgTab = tab;
+      const tabReceived = document.getElementById('msg-tab-received');
+      const tabSent = document.getElementById('msg-tab-sent');
+
+      if (tab === 'received') {
+        tabReceived.className = 'flex-1 py-3 text-sm font-bold text-center text-blue-700 border-b-2 border-blue-600';
+        tabSent.className = 'flex-1 py-3 text-sm font-bold text-center text-slate-400 border-b-2 border-transparent';
+        document.getElementById('msg-modal-title').innerHTML = '<span class="material-symbols-outlined text-blue-600">mail</span> 받은 메시지';
+        await loadReceivedMessages();
+      } else {
+        tabSent.className = 'flex-1 py-3 text-sm font-bold text-center text-blue-700 border-b-2 border-blue-600';
+        tabReceived.className = 'flex-1 py-3 text-sm font-bold text-center text-slate-400 border-b-2 border-transparent';
+        document.getElementById('msg-modal-title').innerHTML = '<span class="material-symbols-outlined text-blue-600">send</span> 보낸 메시지';
+        await loadSentMessages();
+      }
+    }
+
+    async function loadReceivedMessages() {
+      const container = document.getElementById('msg-list-container');
+      container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">로딩 중...</div>';
+
+      try {
+        const messages = await fetchReceivedMessages(_currentUser.id);
+
+        if (messages.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-12">
+              <span class="material-symbols-outlined text-4xl text-slate-300 mb-2 block">mail</span>
+              <p class="text-slate-400 text-sm">받은 메시지가 없습니다</p>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = messages.map(mr => {
+          const msg = mr.messages;
+          const senderName = msg?.profiles?.name || '알 수 없음';
+          const isUnread = !mr.is_read;
+          const unreadDot = isUnread ? '<span class="w-2.5 h-2.5 bg-blue-500 rounded-full shrink-0 animate-pulse"></span>' : '';
+          const bgClass = isUnread ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700';
+
+          return `
+            <div class="${bgClass} rounded-xl border p-4 mb-2 shadow-sm flex flex-col">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  ${unreadDot}
+                  <span class="text-sm font-bold text-slate-800 dark:text-slate-100">${senderName}</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 font-bold">조장</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] text-slate-400 font-medium">${formatMessageTime(msg.created_at)}</span>
+                  <button type="button" onclick="handleDeleteReceivedMessage(${mr.id})" class="p-1 -mr-2 text-slate-300 hover:text-red-500 transition-colors" title="메시지 삭제">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                </div>
+              </div>
+              <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">${msg.content}</p>
+            </div>`;
+        }).join('');
+
+        // 읽음 처리
+        await markAllMessagesAsRead(_currentUser.id);
+        await loadUnreadBadge();
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="text-center py-8 text-red-500 text-sm">메시지를 불러오는 데 실패했습니다.</div>';
+      }
+    }
+
+    async function loadSentMessages() {
+      const container = document.getElementById('msg-list-container');
+      container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">로딩 중...</div>';
+
+      try {
+        const messages = await fetchSentMessages(_currentUser.id);
+
+        if (messages.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-12">
+              <span class="material-symbols-outlined text-4xl text-slate-300 mb-2 block">send</span>
+              <p class="text-slate-400 text-sm">보낸 메시지가 없습니다</p>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = messages.map(msg => {
+          const reads = msg.message_recipients || [];
+          const readCount = reads.filter(r => r.is_read).length;
+          const totalCount = reads.length;
+
+          let statusHtml = '';
+          if (readCount === totalCount && totalCount > 0) {
+            statusHtml = `<span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded">전원 읽음</span>`;
+          } else {
+            statusHtml = `<span class="text-[10px] text-slate-500 font-bold bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">읽음 ${readCount}/${totalCount}</span>`;
+          }
+
+          return `
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-2 shadow-sm">
+              <div class="flex items-center justify-between mb-2 border-b border-slate-100 dark:border-slate-700/50 pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-slate-800 dark:text-slate-100">${formatMessageTime(msg.created_at)} 전송</span>
+                </div>
+                ${statusHtml}
+              </div>
+              <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">${msg.content}</p>
+            </div>`;
+        }).join('');
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="text-center py-8 text-red-500 text-sm">메시지를 불러오는 데 실패했습니다.</div>';
+      }
+    }
+
+    async function handleDeleteReceivedMessage(id) {
+      if (!confirm('이 메시지를 삭제하시겠습니까?')) return;
+      try {
+        await deleteReceivedMessage(id);
+        showToast('메시지가 삭제되었습니다.', 'success');
+        if (_currentMsgTab === 'received') {
+          await loadReceivedMessages();
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('삭제에 실패했습니다.', 'error');
+      }
+    }
+
+    function closeMessageListModal() {
+      const modal = document.getElementById('msg-list-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
     }
 
     // 초기화

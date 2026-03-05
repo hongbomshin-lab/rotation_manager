@@ -377,7 +377,8 @@ async function importPreviousTasks(currentGroupId, currentDeptId, currentDeptInd
     department_id: t.department_id,
     title: t.title,
     rotation_day: t.rotation_day,
-    due_date: calculateDueDate(currentMonday, t.rotation_day)
+    due_date: calculateDueDate(currentMonday, t.rotation_day),
+    comment: t.comment || null
   }));
 
   const { data: inserted, error: insertError } = await _supabase
@@ -514,6 +515,24 @@ async function markAllMessagesAsRead(userId) {
     .update({ is_read: true })
     .eq('recipient_id', userId)
     .eq('is_read', false);
+  if (error) throw error;
+}
+
+async function fetchSentMessages(senderId) {
+  const { data, error } = await _supabase
+    .from('messages')
+    .select('id, content, created_at, message_recipients(is_read, profiles:recipient_id(name))')
+    .eq('sender_id', senderId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function deleteReceivedMessage(messageRecipientId) {
+  const { error } = await _supabase
+    .from('message_recipients')
+    .delete()
+    .eq('id', messageRecipientId);
   if (error) throw error;
 }
 
