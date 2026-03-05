@@ -130,7 +130,24 @@
         </div>
       </section>
 
-      <!-- Deleted Section: Member Progress -->
+      <!-- Section: Group Members List -->
+      <section class="px-4 pt-6 pb-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-500 text-xl">group</span>
+            <h2 class="text-slate-900 dark:text-white text-base font-bold">우리 조원 명단</h2>
+          </div>
+          <span id="group-member-count" class="text-xs text-slate-500 font-medium"></span>
+        </div>
+        <button onclick="openSendMessageModal()"
+          class="w-full flex items-center justify-center gap-2 rounded-xl h-12 mb-3 bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-bold transition-all active:scale-95 shadow-md shadow-violet-200 dark:shadow-none">
+          <span class="material-symbols-outlined text-lg">send</span>
+          <span>메시지 보내기</span>
+        </button>
+        <div id="group-member-list" class="flex flex-col gap-2">
+          <div class="text-center py-4 text-slate-400 text-sm">로딩 중...</div>
+        </div>
+      </section>
 
       <!-- Bottom Nav -->
       <nav
@@ -204,9 +221,22 @@
             class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
         </div>
         <div>
-          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">필수 준비물</label>
-          <input id="create-guide-materials" type="text" placeholder="예: 덴티폼, 기본 기구 세트"
-            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">필수 준비물</label>
+            <button type="button" onclick="addMaterialInput('create')"
+              class="text-blue-600 hover:text-blue-700 text-xs font-bold px-2 py-0.5 rounded-md hover:bg-blue-50 transition-colors dark:hover:bg-blue-900/30">+
+              추가</button>
+          </div>
+          <div id="create-guide-materials-container" class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 material-input-row">
+              <input type="text" placeholder="예: 덴티폼"
+                class="flex-1 h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm material-input-value" />
+              <button type="button" onclick="this.parentElement.remove()"
+                class="p-2 text-slate-400 hover:text-red-500 transition-colors shrink-0">
+                <span class="material-symbols-outlined pointer-events-none">remove_circle</span>
+              </button>
+            </div>
+          </div>
         </div>
         <button type="submit"
           class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
@@ -275,9 +305,14 @@
             class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
         </div>
         <div>
-          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">필수 준비물</label>
-          <input id="edit-guide-materials" type="text"
-            class="w-full h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm" />
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">필수 준비물</label>
+            <button type="button" onclick="addMaterialInput('edit')"
+              class="text-blue-600 hover:text-blue-700 text-xs font-bold px-2 py-0.5 rounded-md hover:bg-blue-50 transition-colors dark:hover:bg-blue-900/30">+
+              추가</button>
+          </div>
+          <div id="edit-guide-materials-container" class="flex flex-col gap-2">
+          </div>
         </div>
         <button type="submit"
           class="w-full h-14 bg-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
@@ -301,6 +336,45 @@
           class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold active:scale-95 transition-all">취소</button>
         <button type="button" onclick="closeConfirmModal(true)"
           class="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold shadow-md shadow-red-200 dark:shadow-none active:scale-95 transition-all">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Message Modal -->
+  <div id="send-msg-modal" class="fixed inset-0 z-[60] hidden items-center justify-center modal-overlay">
+    <div
+      class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <span class="material-symbols-outlined text-violet-600">send</span> 메시지 보내기
+        </h3>
+        <button onclick="closeSendMessageModal()" class="text-slate-400 hover:text-slate-600">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="p-5 flex flex-col gap-4">
+        <!-- Recipient selection -->
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">수신자 선택</label>
+          <label
+            class="flex items-center gap-3 p-3 bg-violet-50 dark:bg-violet-900/20 rounded-xl border-2 border-violet-200 dark:border-violet-800 cursor-pointer mb-2">
+            <input type="checkbox" id="msg-select-all" onchange="toggleSelectAllRecipients(this.checked)"
+              class="h-5 w-5 rounded border-2 border-violet-300 text-violet-600 focus:ring-violet-500" />
+            <span class="text-sm font-bold text-violet-700 dark:text-violet-300">전체 보내기</span>
+          </label>
+          <div id="msg-recipient-list" class="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+          </div>
+        </div>
+        <!-- Message content -->
+        <div>
+          <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 block">메시지 내용</label>
+          <textarea id="msg-content" rows="4" required placeholder="조원에게 전달할 내용을 입력하세요..."
+            class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-violet-500 focus:ring-0 text-sm resize-none"></textarea>
+        </div>
+        <button type="button" onclick="handleSendMessage()"
+          class="w-full h-14 bg-gradient-to-r from-violet-600 to-blue-600 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">send</span> 전송하기
+        </button>
       </div>
     </div>
   </div>
@@ -349,7 +423,7 @@
       }
 
       // 데이터 로드
-      await Promise.all([loadCurrentTasks(), loadCurrentGuides()]);
+      await Promise.all([loadCurrentTasks(), loadCurrentGuides(), loadGroupMembers()]);
     }
 
     // ========== 현재 등록된 과제 ==========
@@ -403,25 +477,196 @@
         return;
       }
 
-      container.innerHTML = guides.map(g => `
-        <div class="flex items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 gap-3">
-          <div class="bg-primary/30 p-1.5 rounded-lg text-blue-700 shrink-0">
-            <span class="material-symbols-outlined text-lg">event</span>
+      container.innerHTML = guides.map(g => {
+        let itemsHtml = '';
+        if (g.attendance_time) {
+          itemsHtml += `
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="material-symbols-outlined text-sm text-blue-500 border border-blue-100 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 p-1 rounded-md shrink-0">alarm</span>
+              <p class="text-sm font-medium text-slate-800 dark:text-slate-100 flex-1 truncate"><span class="text-xs text-slate-500 font-semibold mr-1.5">출첵</span>${g.attendance_time.substring(0, 5)}</p>
+            </div>
+          `;
+        }
+        if (g.dress_code) {
+          itemsHtml += `
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="material-symbols-outlined text-sm text-indigo-500 border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50 dark:bg-indigo-900/20 p-1 rounded-md shrink-0">checkroom</span>
+              <p class="text-sm font-medium text-slate-800 dark:text-slate-100 flex-1 truncate"><span class="text-xs text-slate-500 font-semibold mr-1.5">복장</span>${g.dress_code}</p>
+            </div>
+          `;
+        }
+        if (g.materials) {
+          let parsedMaterials = [];
+          try {
+            parsedMaterials = JSON.parse(g.materials);
+            if (!Array.isArray(parsedMaterials)) parsedMaterials = [g.materials];
+          } catch (e) {
+            parsedMaterials = [g.materials];
+          }
+          itemsHtml += `
+            <div class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-sm text-orange-500 border border-orange-100 dark:border-orange-900/50 bg-orange-50 dark:bg-orange-900/20 p-1 rounded-md shrink-0">handyman</span>
+              <div class="flex-1 min-w-0 pt-0.5">
+                <p class="text-xs text-slate-500 font-semibold mb-0.5">준비물</p>
+                <div class="flex flex-col gap-0.5">
+                  ${parsedMaterials.map(m => `<p class="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">• ${m}</p>`).join('')}
+                </div>
+              </div>
+            </div>
+            `;
+        }
+        if (g.comment) {
+          itemsHtml += `
+            <div class="flex items-start gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-700/50">
+              <span class="material-symbols-outlined text-sm text-yellow-600 border border-yellow-200 dark:border-yellow-900/50 bg-yellow-50 dark:bg-yellow-900/20 p-1 rounded-md shrink-0">chat</span>
+              <div class="flex-1 min-w-0 pt-0.5">
+                <p class="text-sm font-medium text-slate-700 dark:text-slate-300 w-full whitespace-pre-wrap">${g.comment}</p>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm">
+          <div class="flex items-start justify-between mb-3 border-b border-slate-100 dark:border-slate-700/50 pb-3">
+             <div class="flex items-center gap-2">
+                <div class="bg-primary/30 py-1 px-2 rounded-md text-blue-700 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[16px]">event</span>
+                </div>
+                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">${g.target_date ? formatDateShort(g.target_date) : '날짜 미정'}</p>
+             </div>
+             <div class="flex gap-1 shrink-0">
+                <button type="button" onclick="openEditGuideModal(${g.id})" class="p-1 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors active:scale-90 aspect-square flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[18px] pointer-events-none">edit</span>
+                </button>
+                <button type="button" onclick="handleDeleteGuide(${g.id})" class="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors active:scale-90 aspect-square flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[18px] pointer-events-none">delete</span>
+                </button>
+             </div>
           </div>
-          <div class="flex-1 min-w-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 p-1 -m-1 rounded transition-colors" onclick="openEditGuideModal(${g.id})">
-            <p class="text-xs text-slate-500 font-medium">${g.target_date ? formatDateShort(g.target_date) : '날짜 미정'}</p>
-            <p class="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
-              ${g.attendance_time ? '⏰ ' + g.attendance_time.substring(0, 5) + ' ' : ''}${g.dress_code ? '👔 ' + g.dress_code : ''}${g.dress_code && g.materials ? ' · ' : ''}${g.materials ? '🔧 ' + g.materials : ''}
-            </p>
+          <div class="flex flex-col">
+            ${itemsHtml || '<p class="text-sm text-slate-400 italic">등록된 상세 항목이 없습니다.</p>'}
           </div>
-          <button type="button" onclick="handleDeleteGuide(${g.id})" class="p-2 ml-1 text-slate-300 hover:text-red-500 transition-colors shrink-0 active:scale-90">
-            <span class="material-symbols-outlined text-xl pointer-events-none">delete</span>
-          </button>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
-    // ========== Deleted Member Progress Section ==========
+    // ========== 우리 조원 명단 ==========
+    async function loadGroupMembers() {
+      try {
+        const members = await fetchGroupMembers(_currentUser.group_id);
+        const container = document.getElementById('group-member-list');
+        const countEl = document.getElementById('group-member-count');
+        countEl.textContent = `총 ${members.length}명`;
+
+        if (members.length === 0) {
+          container.innerHTML = `
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-6 text-center">
+              <span class="material-symbols-outlined text-3xl text-slate-300 mb-2 block">group_off</span>
+              <p class="text-slate-400 text-sm">등록된 조원이 없습니다</p>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = members.map(m => `
+          <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-lg">
+                ${m.name.charAt(0)}
+              </div>
+              <div>
+                <p class="text-[15px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  ${m.name}
+                  ${m.is_leader ? '<span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings:\'FILL\' 1">crown</span>' : ''}
+                </p>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+        const container = document.getElementById('group-member-list');
+        container.innerHTML = '<div class="text-center py-4 text-red-500 text-sm">불러오기에 실패했습니다.</div>';
+      }
+    }
+
+    // ========== 메시지 보내기 ==========
+    let _memberListForMsg = [];
+
+    async function openSendMessageModal() {
+      const modal = document.getElementById('send-msg-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      // 조원 목록 로드
+      try {
+        _memberListForMsg = await fetchGroupMembers(_currentUser.group_id);
+        const listEl = document.getElementById('msg-recipient-list');
+        // 자기 자신은 제외
+        const others = _memberListForMsg.filter(m => m.id !== _currentUser.id);
+        listEl.innerHTML = others.map(m => `
+          <label class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors">
+            <input type="checkbox" value="${m.id}" class="msg-recipient-cb h-4 w-4 rounded border-2 border-slate-300 text-violet-600 focus:ring-violet-500" />
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${m.name}${m.is_leader ? ' (조장)' : ''}</span>
+          </label>
+        `).join('');
+        document.getElementById('msg-select-all').checked = false;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function closeSendMessageModal() {
+      const modal = document.getElementById('send-msg-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.getElementById('msg-content').value = '';
+      document.getElementById('msg-select-all').checked = false;
+    }
+
+    function toggleSelectAllRecipients(checked) {
+      document.querySelectorAll('.msg-recipient-cb').forEach(cb => {
+        cb.checked = checked;
+      });
+    }
+
+    async function handleSendMessage() {
+      const content = document.getElementById('msg-content').value.trim();
+      if (!content) {
+        showToast('메시지 내용을 입력해주세요.', 'warning');
+        return;
+      }
+
+      const selectAllChecked = document.getElementById('msg-select-all').checked;
+      let recipientIds = [];
+
+      if (selectAllChecked) {
+        // 전체: 자기 자신 제외한 조원 전체
+        recipientIds = _memberListForMsg
+          .filter(m => m.id !== _currentUser.id)
+          .map(m => m.id);
+      } else {
+        // 선택된 조원만
+        document.querySelectorAll('.msg-recipient-cb:checked').forEach(cb => {
+          recipientIds.push(cb.value);
+        });
+      }
+
+      if (recipientIds.length === 0) {
+        showToast('수신자를 선택해주세요.', 'warning');
+        return;
+      }
+
+      try {
+        await sendMessage(_currentUser.id, _currentUser.group_id, content, recipientIds);
+        showToast(`${recipientIds.length}명에게 메시지를 보냈습니다!`, 'success');
+        closeSendMessageModal();
+      } catch (err) {
+        console.error(err);
+        showToast('메시지 전송에 실패했습니다.', 'error');
+      }
+    }
 
     // ========== 이전 조 과제 및 가이드 불러오기 ==========
     async function handleImportTasks() {
@@ -513,6 +758,62 @@
       }
     }
 
+    // ========== 다중 준비물 관리 ==========
+    function createMaterialInputTemplate(value = '') {
+      return `
+        <div class="flex items-center gap-2 material-input-row">
+          <input type="text" placeholder="예: 덴티폼" value="${value.replace(/"/g, '&quot;')}"
+            class="flex-1 h-12 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 focus:border-blue-500 focus:ring-0 text-sm material-input-value" />
+          <button type="button" onclick="this.parentElement.remove()" class="p-2 text-slate-400 hover:text-red-500 transition-colors shrink-0">
+            <span class="material-symbols-outlined pointer-events-none">remove_circle</span>
+          </button>
+        </div>
+      `;
+    }
+
+    function addMaterialInput(type) {
+      const container = document.getElementById(`${type}-guide-materials-container`);
+      if (container) {
+        container.insertAdjacentHTML('beforeend', createMaterialInputTemplate());
+      }
+    }
+
+    function getMaterialsFromContainer(type) {
+      const container = document.getElementById(`${type}-guide-materials-container`);
+      if (!container) return null;
+      const inputs = container.querySelectorAll('.material-input-value');
+      const values = Array.from(inputs).map(input => input.value.trim()).filter(val => val !== '');
+      if (values.length === 0) return null;
+      if (values.length === 1) return values[0]; // 단일 항목
+      return JSON.stringify(values);
+    }
+
+    function setMaterialsToContainer(type, materialsString) {
+      const container = document.getElementById(`${type}-guide-materials-container`);
+      if (!container) return;
+      container.innerHTML = '';
+      if (!materialsString) {
+        addMaterialInput(type);
+      } else {
+        try {
+          const parsed = JSON.parse(materialsString);
+          if (Array.isArray(parsed)) {
+            if (parsed.length === 0) {
+              addMaterialInput(type);
+            } else {
+              parsed.forEach(val => {
+                container.insertAdjacentHTML('beforeend', createMaterialInputTemplate(val));
+              });
+            }
+          } else {
+            container.insertAdjacentHTML('beforeend', createMaterialInputTemplate(materialsString));
+          }
+        } catch (e) {
+          container.insertAdjacentHTML('beforeend', createMaterialInputTemplate(materialsString));
+        }
+      }
+    }
+
     // ========== 모달 ==========
     function openCreateModal() {
       const modal = document.getElementById('create-modal');
@@ -527,6 +828,8 @@
       // Reset forms
       document.getElementById('modal-task-form').reset();
       document.getElementById('modal-guide-form').reset();
+
+      setMaterialsToContainer('create', '');
     }
 
     function switchModalTab(tab) {
@@ -582,10 +885,11 @@
       const targetDate = document.getElementById('create-guide-date').value;
       const attendanceTime = document.getElementById('create-guide-time').value || null;
       const dressCode = document.getElementById('create-guide-dress').value.trim();
-      const materials = document.getElementById('create-guide-materials').value.trim();
+      const materials = getMaterialsFromContainer('create');
+      const comment = document.getElementById('create-guide-comment').value.trim();
 
-      if (!dressCode && !materials && !attendanceTime) {
-        showToast('복장 안내, 출첵시간, 또는 필수 준비물을 입력해주세요.', 'warning');
+      if (!dressCode && !materials && !attendanceTime && !comment) {
+        showToast('복장 안내, 출첵시간, 필수 준비물, 또는 코멘트를 입력해주세요.', 'warning');
         return;
       }
 
@@ -596,7 +900,8 @@
           target_date: targetDate || null,
           attendance_time: attendanceTime,
           dress_code: dressCode || null,
-          materials: materials || null
+          materials: materials || null,
+          comment: comment || null
         });
         showToast('가이드가 등록되었습니다!', 'success');
         closeCreateModal();
@@ -661,7 +966,9 @@
       document.getElementById('edit-guide-date').value = guide.target_date || '';
       document.getElementById('edit-guide-time').value = guide.attendance_time || '';
       document.getElementById('edit-guide-dress').value = guide.dress_code || '';
-      document.getElementById('edit-guide-materials').value = guide.materials || '';
+      document.getElementById('edit-guide-comment').value = guide.comment || '';
+
+      setMaterialsToContainer('edit', guide.materials);
 
       const modal = document.getElementById('edit-guide-modal');
       modal.classList.remove('hidden');
@@ -680,10 +987,11 @@
       const targetDate = document.getElementById('edit-guide-date').value;
       const attendanceTime = document.getElementById('edit-guide-time').value || null;
       const dressCode = document.getElementById('edit-guide-dress').value.trim();
-      const materials = document.getElementById('edit-guide-materials').value.trim();
+      const materials = getMaterialsFromContainer('edit');
+      const comment = document.getElementById('edit-guide-comment').value.trim();
 
-      if (!dressCode && !materials && !attendanceTime) {
-        showToast('복장 안내, 출첵시간, 또는 필수 준비물을 입력해주세요.', 'warning');
+      if (!dressCode && !materials && !attendanceTime && !comment) {
+        showToast('복장 안내, 출첵시간, 필수 준비물, 또는 코멘트를 입력해주세요.', 'warning');
         return;
       }
 
@@ -692,7 +1000,8 @@
           target_date: targetDate || null,
           attendance_time: attendanceTime,
           dress_code: dressCode || null,
-          materials: materials || null
+          materials: materials || null,
+          comment: comment || null
         });
         showToast('가이드가 수정되었습니다!', 'success');
         closeEditGuideModal();

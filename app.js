@@ -125,6 +125,17 @@ async function getCurrentUser() {
   return data;
 }
 
+async function fetchGroupMembers(groupId) {
+  const { data, error } = await _supabase
+    .from('profiles')
+    .select('*')
+    .eq('group_id', groupId)
+    .order('is_leader', { ascending: false })
+    .order('name');
+  if (error) throw error;
+  return data || [];
+}
+
 async function signUpUser(email, password, name, groupId, isLeader) {
   // 1. Supabase Auth 회원가입
   const { data, error } = await _supabase.auth.signUp({ email, password });
@@ -427,7 +438,8 @@ async function importPreviousGuides(currentGroupId, currentDeptId, currentDeptIn
       target_date: getLocalDateString(newDate),
       attendance_time: g.attendance_time,
       dress_code: g.dress_code,
-      materials: g.materials
+      materials: g.materials,
+      comment: g.comment
     };
   });
 
@@ -438,6 +450,71 @@ async function importPreviousGuides(currentGroupId, currentDeptId, currentDeptIn
 
   if (insertError) throw insertError;
   return { inserted, prevGroupId };
+}
+
+// ========================================
+// Messages (조장 → 조원 메시지)
+// ========================================
+
+async function sendMessage(senderId, groupId, content, recipientIds) {
+  // 1. messages 테이블에 메시지 본문 삽입
+  const { data: msg, error: msgError } = await _supabase
+    .from('messages')
+    .insert({ sender_id: senderId, group_id: groupId, content: content })
+    .select()
+    .single();
+  if (msgError) throw msgError;
+
+  // 2. message_recipients에 수신자 삽입
+  const recipients = recipientIds.map(rid => ({
+    message_id: msg.id,
+    recipient_id: rid,
+    is_read: false
+  }));
+  const { error: recipError } = await _supabase
+    .from('message_recipients')
+    .insert(recipients);
+  if (recipError) throw recipError;
+
+  return msg;
+}
+
+async function fetchReceivedMessages(userId) {
+  const { data, error } = await _supabase
+    .from('message_recipients')
+    .select('*, messages(id, content, created_at, sender_id, profiles:sender_id(name))')
+    .eq('recipient_id', userId)
+    .order('id', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function getUnreadMessageCount(userId) {
+  const { count, error } = await _supabase
+    .from('message_recipients')
+    .select('*', { count: 'exact', head: true })
+    .eq('recipient_id', userId)
+    .eq('is_read', false);
+  if (error) throw error;
+  return count || 0;
+}
+
+async function markMessageAsRead(messageId, userId) {
+  const { error } = await _supabase
+    .from('message_recipients')
+    .update({ is_read: true })
+    .eq('message_id', messageId)
+    .eq('recipient_id', userId);
+  if (error) throw error;
+}
+
+async function markAllMessagesAsRead(userId) {
+  const { error } = await _supabase
+    .from('message_recipients')
+    .update({ is_read: true })
+    .eq('recipient_id', userId)
+    .eq('is_read', false);
+  if (error) throw error;
 }
 
 // ========================================

@@ -46,7 +46,26 @@ CREATE TABLE IF NOT EXISTS daily_guides (
   target_date DATE,
   attendance_time TIME,
   dress_code TEXT,
-  materials TEXT
+  materials TEXT,
+  comment TEXT
+);
+
+-- 6. messages (조장이 보낸 메시지)
+CREATE TABLE IF NOT EXISTS messages (
+  id SERIAL PRIMARY KEY,
+  sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  group_id INT NOT NULL CHECK (group_id BETWEEN 1 AND 10),
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 7. message_recipients (메시지 수신자)
+CREATE TABLE IF NOT EXISTS message_recipients (
+  id SERIAL PRIMARY KEY,
+  message_id INT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+  recipient_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  is_read BOOLEAN DEFAULT FALSE,
+  UNIQUE(message_id, recipient_id)
 );
 
 -- ============================================
@@ -79,6 +98,8 @@ GRANT ALL ON profiles TO anon, authenticated;
 GRANT ALL ON tasks TO anon, authenticated;
 GRANT ALL ON task_progress TO anon, authenticated;
 GRANT ALL ON daily_guides TO anon, authenticated;
+GRANT ALL ON messages TO anon, authenticated;
+GRANT ALL ON message_recipients TO anon, authenticated;
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
