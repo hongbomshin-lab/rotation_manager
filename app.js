@@ -301,7 +301,8 @@ async function fetchWeeklyGuides(groupId, departmentId) {
     .eq('department_id', departmentId)
     .gte('target_date', getLocalDateString(sunday))
     .lte('target_date', getLocalDateString(saturday))
-    .order('target_date');
+    .order('target_date')
+    .order('attendance_time');
   if (error) throw error;
   return data || [];
 }
