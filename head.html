@@ -800,7 +800,8 @@
     async function handleAdvanceWeek() {
       if (!(await openConfirmModal('다음주 가기', '수동으로 로테이션을 다음주차로 넘기시겠습니까? (\n※ 조원 전체에게 적용됩니다)'))) return;
 
-      const nextWeek = _weekNumber + 1;
+      // 10주차에서 다음주를 누르면 1주차로 순환
+      const nextWeek = _weekNumber >= 10 ? 1 : _weekNumber + 1;
       try {
         await setGroupWeekOverride(_currentUser.group_id, nextWeek);
         showToast(`성공적으로 ${nextWeek}주차로 넘어갔습니다!`, 'success');
@@ -814,7 +815,8 @@
     async function handlePreviousWeek() {
       if (!(await openConfirmModal('이전주 돌아가기', '다음주 넘어가기를 취소하고 이전 주차로 돌리시겠습니까?'))) return;
 
-      const prevWeek = _weekNumber - 1;
+      // 1주차에서 이전주를 누르면 10주차로 순환
+      const prevWeek = _weekNumber <= 1 ? 10 : _weekNumber - 1;
       try {
         await setGroupWeekOverride(_currentUser.group_id, prevWeek);
         showToast(`성공적으로 ${prevWeek}주차로 돌아갔습니다!`, 'success');
