@@ -52,25 +52,16 @@ function getMonday(date) {
   return d;
 }
 
-/** 현재 몇 주차인지 계산 (1-indexed) */
-function getCurrentWeekNumber(date = new Date()) {
-  const monday = getMonday(date);
-  const startMonday = new Date(ROTATION_START_DATE);
-  startMonday.setHours(0, 0, 0, 0);
-  const diffMs = monday.getTime() - startMonday.getTime();
-  const diffWeeks = Math.round(diffMs / (7 * 24 * 60 * 60 * 1000));
-  return diffWeeks + 1;
-}
+// (자동 넘김 로직 삭제됨) 현재 주차는 group_settings 테이블의 수동 값으로만 결정됩니다.
 
 /** 해당 조의 이번 주 진료과 인덱스 (0~9) */
-function getCurrentDepartmentIndex(groupId, weekNumber = null) {
-  if (weekNumber === null) weekNumber = getCurrentWeekNumber();
+function getCurrentDepartmentIndex(groupId, weekNumber) {
   const offset = getGroupOffset(groupId);
   return ((offset + weekNumber - 1) % 10 + 10) % 10;
 }
 
 /** 해당 조의 이번 주 진료과 이름 */
-function getCurrentDepartmentName(groupId, weekNumber = null) {
+function getCurrentDepartmentName(groupId, weekNumber) {
   return DEPARTMENT_NAMES[getCurrentDepartmentIndex(groupId, weekNumber)];
 }
 
@@ -295,7 +286,7 @@ async function fetchDailyGuide(groupId, departmentId, targetDate) {
 }
 
 async function fetchWeeklyGuides(groupId, departmentId) {
-  const monday = getMonday(new Date());
+  const monday = await getEffectiveMonday(groupId);
 
   const sunday = new Date(monday);
   sunday.setDate(sunday.getDate() - 1); // 일요일부터
@@ -345,11 +336,52 @@ async function deleteDailyGuide(guideId) {
 }
 
 // ========================================
+// 수동 주차 넘기기 (조별 설정)
+// ========================================
+
+async function getGroupWeekOverride(groupId) {
+  const { data, error } = await _supabase
+    .from('group_settings')
+    .select('manual_week_override')
+    .eq('group_id', groupId)
+    .maybeSingle();
+  if (error) {
+    console.error(error);
+    return 0; // fallback
+  }
+  return data ? (data.manual_week_override || 0) : 0;
+}
+
+async function setGroupWeekOverride(groupId, weekNumber) {
+  const { data, error } = await _supabase
+    .from('group_settings')
+    .upsert({ group_id: groupId, manual_week_override: weekNumber }, { onConflict: 'group_id' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function getEffectiveWeekNumber(groupId) {
+  if (!groupId) return 1;
+  const override = await getGroupWeekOverride(groupId);
+  return override > 0 ? override : 1;
+}
+
+async function getEffectiveMonday(groupId) {
+  const week = await getEffectiveWeekNumber(groupId);
+  const startMonday = new Date(ROTATION_START_DATE);
+  startMonday.setHours(0, 0, 0, 0);
+  startMonday.setDate(startMonday.getDate() + ((week - 1) * 7));
+  return startMonday;
+}
+
+// ========================================
 // 이전 조 과제 불러오기 (조장 전용)
 // ========================================
 
 async function importPreviousTasks(currentGroupId, currentDeptId, currentDeptIndex) {
-  const weekNumber = getCurrentWeekNumber();
+  const weekNumber = await getEffectiveWeekNumber(currentGroupId);
   const prevGroupId = getPreviousGroupId(currentDeptIndex, weekNumber);
 
   if (!prevGroupId) {
@@ -369,7 +401,7 @@ async function importPreviousTasks(currentGroupId, currentDeptId, currentDeptInd
   }
 
   // 이번 주 월요일
-  const currentMonday = getMonday(new Date());
+  const currentMonday = await getEffectiveMonday(currentGroupId);
 
   // 새 과제 생성 (rotation_day 기반으로 due_date 재계산)
   const newTasks = prevTasks.map(t => ({
@@ -395,7 +427,7 @@ async function importPreviousTasks(currentGroupId, currentDeptId, currentDeptInd
 // ========================================
 
 async function importPreviousGuides(currentGroupId, currentDeptId, currentDeptIndex) {
-  const weekNumber = getCurrentWeekNumber();
+  const weekNumber = await getEffectiveWeekNumber(currentGroupId);
   const prevGroupId = getPreviousGroupId(currentDeptIndex, weekNumber);
 
   if (!prevGroupId) {
@@ -403,7 +435,7 @@ async function importPreviousGuides(currentGroupId, currentDeptId, currentDeptIn
   }
 
   // 이번 주 월요일
-  const currentMonday = getMonday(new Date());
+  const currentMonday = await getEffectiveMonday(currentGroupId);
 
   // 지난 주 일요일 ~ 지난 주 토요일 날짜 범위 계산
   const prevMonday = new Date(currentMonday);

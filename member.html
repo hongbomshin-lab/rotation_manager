@@ -231,8 +231,8 @@
       _currentUser = await requireAuth();
       if (!_currentUser) return;
 
-      const weekNum = getCurrentWeekNumber();
-      _currentDeptIndex = getCurrentDepartmentIndex(_currentUser.group_id);
+      const weekNum = await getEffectiveWeekNumber(_currentUser.group_id);
+      _currentDeptIndex = getCurrentDepartmentIndex(_currentUser.group_id, weekNum);
       const dept = await getDepartmentByIndex(_currentDeptIndex);
       _currentDept = dept;
 

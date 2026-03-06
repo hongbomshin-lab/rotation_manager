@@ -64,9 +64,21 @@
       <div class="px-4 pt-6 pb-2">
         <div class="w-full h-32 rounded-xl overflow-hidden relative bg-gradient-to-r from-blue-600 to-blue-400">
           <div class="absolute inset-0 flex items-end p-4">
-            <div class="flex flex-col">
+            <div class="flex flex-col w-full">
               <span id="banner-week" class="text-white font-semibold text-sm">로딩 중...</span>
-              <span id="banner-dept" class="text-blue-100 text-xs mt-0.5"></span>
+              <div class="flex justify-between items-center mt-0.5 w-full">
+                <span id="banner-dept" class="text-blue-100 text-xs"></span>
+                <div class="flex gap-1.5 shrink-0">
+                  <button id="btn-prev-week" onclick="handlePreviousWeek()"
+                    class="bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded shadow-sm text-[10px] font-bold backdrop-blur-sm transition-colors flex items-center gap-0.5 active:scale-95 hidden">
+                    <span class="material-symbols-outlined text-[14px]">undo</span> <span>돌아가기</span>
+                  </button>
+                  <button onclick="handleAdvanceWeek()"
+                    class="bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded shadow-sm text-[10px] font-bold backdrop-blur-sm transition-colors flex items-center gap-0.5 active:scale-95">
+                    <span>다음주 가기</span> <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="absolute top-4 right-4">
@@ -457,9 +469,13 @@
         return;
       }
 
-      _weekNumber = getCurrentWeekNumber();
-      _currentDeptIndex = getCurrentDepartmentIndex(_currentUser.group_id);
+      _weekNumber = await getEffectiveWeekNumber(_currentUser.group_id);
+      _currentDeptIndex = getCurrentDepartmentIndex(_currentUser.group_id, _weekNumber);
       _currentDept = await getDepartmentByIndex(_currentDeptIndex);
+
+      if (_weekNumber > 1) {
+        document.getElementById('btn-prev-week').classList.remove('hidden');
+      }
 
       // 배너 렌더링
       document.getElementById('banner-week').textContent = `임상 실습 ${_weekNumber}주차 진행 중`;
@@ -779,6 +795,34 @@
       return new Promise(resolve => {
         _confirmResolve = resolve;
       });
+    }
+
+    async function handleAdvanceWeek() {
+      if (!(await openConfirmModal('다음주 가기', '수동으로 로테이션을 다음주차로 넘기시겠습니까? (\n※ 조원 전체에게 적용됩니다)'))) return;
+
+      const nextWeek = _weekNumber + 1;
+      try {
+        await setGroupWeekOverride(_currentUser.group_id, nextWeek);
+        showToast(`성공적으로 ${nextWeek}주차로 넘어갔습니다!`, 'success');
+        setTimeout(() => { location.reload(); }, 1000);
+      } catch (err) {
+        console.error(err);
+        showToast('주차 변경에 실패했습니다.', 'error');
+      }
+    }
+
+    async function handlePreviousWeek() {
+      if (!(await openConfirmModal('이전주 돌아가기', '다음주 넘어가기를 취소하고 이전 주차로 돌리시겠습니까?'))) return;
+
+      const prevWeek = _weekNumber - 1;
+      try {
+        await setGroupWeekOverride(_currentUser.group_id, prevWeek);
+        showToast(`성공적으로 ${prevWeek}주차로 돌아갔습니다!`, 'success');
+        setTimeout(() => { location.reload(); }, 1000);
+      } catch (err) {
+        console.error(err);
+        showToast('주차 변경에 실패했습니다.', 'error');
+      }
     }
 
     function closeConfirmModal(result) {

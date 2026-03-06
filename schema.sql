@@ -68,6 +68,12 @@ CREATE TABLE IF NOT EXISTS message_recipients (
   UNIQUE(message_id, recipient_id)
 );
 
+-- 8. group_settings (조별 설정 - 주차 넘기기 등)
+CREATE TABLE IF NOT EXISTS group_settings (
+  group_id INT PRIMARY KEY CHECK (group_id BETWEEN 1 AND 10),
+  manual_week_override INT DEFAULT 0
+);
+
 -- ============================================
 -- 시드 데이터: 10개 진료과
 -- ============================================
@@ -100,6 +106,7 @@ GRANT ALL ON task_progress TO anon, authenticated;
 GRANT ALL ON daily_guides TO anon, authenticated;
 GRANT ALL ON messages TO anon, authenticated;
 GRANT ALL ON message_recipients TO anon, authenticated;
+GRANT ALL ON group_settings TO anon, authenticated;
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
